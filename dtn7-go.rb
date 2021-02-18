@@ -18,8 +18,10 @@ class Dtn7Go < Formula
       system "go", "build", "-o", "#{name}-tool", "./cmd/dtn-tool/"
       bin.install "#{name}d"
       bin.install "#{name}-tool"
+    end
 
-      (src/"#{name}d.toml").write <<~EOS
+    (etc/"#{name}").mkpath
+    (etc/"#{name}/configuration.toml").write <<~EOS
 # SPDX-FileCopyrightText: 2019 Markus Sommer
 # SPDX-FileCopyrightText: 2019, 2020 Alvar Penning
 # SPDX-FileCopyrightText: 2020 Jonas Höchst
@@ -30,7 +32,7 @@ class Dtn7Go < Formula
 [core]
 # Path to the bundle storage. Bundles will be saved in this directory to be
 # present after restarting dtnd.
-store = "#{etc}/#{name}/store"
+store = "#{var}/#{name}/store"
 
 # Allow inspection of forwarding bundles, containing an administrative record.
 # This allows deletion of stored bundles after being received.
@@ -171,15 +173,17 @@ algorithm = "epidemic"
 # [routing.sensor-mule-conf.routing]
 # algorithm = "epidemic"
 
-      EOS
+    EOS
 
-      etc.install "#{name}d.toml"
-
-      ohai "Created dtn7.toml config file at /usr/local/etc/#{name}d.toml"
-    end
+    ohai "Created config file at /usr/local/etc/#{name}/configuration.toml"
+    
   end
 
-  plist_options :manual => "dtn7d"
+  def post_install
+    (var/"#{name}").mkpath
+  end
+
+  plist_options :manual => "dtn7-god"
 
   def plist; <<~EOS
     <?xml version="1.0" encoding="UTF-8"?>
@@ -191,7 +195,7 @@ algorithm = "epidemic"
         <key>ProgramArguments</key>
         <array>
           <string>#{opt_bin}/#{name}d</string>
-          <string>/usr/local/etc/#{name}d.toml</string>
+          <string>/usr/local/etc/#{name}/configuration.toml</string>
         </array>
         <key>KeepAlive</key>
         <dict>
@@ -202,10 +206,12 @@ algorithm = "epidemic"
         </dict>
         <key>ProcessType</key>
         <string>Background</string>
+        <key>WorkingDirectory</key>
+        <string>#{var}/#{name}</string>
         <key>StandardErrorPath</key>
-        <string>#{var}/log/#{name}d.log</string>
+        <string>#{var}/#{name}/daemon.log</string>
         <key>StandardOutPath</key>
-        <string>#{var}/log/#{name}d.log</string>
+        <string>#{var}/#{name}/daemon.log</string>
       </dict>
     </plist>
   EOS
