@@ -1,4 +1,4 @@
-class Dtn7 < Formula
+class Dtn7Go < Formula
   desc "Delay-tolerant networking software suite, Bundle Protocol Version 7"
   homepage "https://dtn7.github.io"
   url "https://github.com/dtn7/dtn7-go.git",
